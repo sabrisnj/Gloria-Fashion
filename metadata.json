@@ -1,7 +1,5 @@
 {
-  "name": "Glória Fashion",
+  "name": "Glória Fashion PWA",
   "description": "App oficial da Glória Fashion: Agendamentos, Catálogo, Vouchers e Fidelidade.",
-  "requestFramePermissions": [
-    "camera"
-  ]
+  "requestFramePermissions": ["camera"]
 }
