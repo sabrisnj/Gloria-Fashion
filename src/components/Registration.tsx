@@ -62,7 +62,7 @@ export function Registration({ onRegister, onAdminLogin }: RegistrationProps) {
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-paper relative overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute -top-20 -right-20 w-64 h-64 bg-peach/10 rounded-full blur-3xl" />
-      <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-azure/10 rounded-full blur-3xl" />
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}

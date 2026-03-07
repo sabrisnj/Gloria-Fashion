@@ -53,7 +53,7 @@ export function Support() {
             label="Facebook" 
             value="Gloria Ferreira" 
             href="https://facebook.com/GloriaFerreira"
-            color="bg-blue-100 text-blue-600"
+            color="bg-azure/10 text-azure"
           />
           <ContactCard 
             icon={MapPin} 

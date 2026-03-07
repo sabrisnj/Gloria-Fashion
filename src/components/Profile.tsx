@@ -225,7 +225,7 @@ export function Profile({ client, onLogout, accessibility, setAccessibility }: P
             rel="noopener noreferrer"
             className="card flex items-center gap-4 hover:bg-peach/10 transition-colors border-peach/20"
           >
-            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 bg-azure/10 text-azure rounded-full flex items-center justify-center shrink-0">
               <Star size={20} />
             </div>
             <div>
