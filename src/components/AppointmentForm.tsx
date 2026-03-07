@@ -70,16 +70,7 @@ export function AppointmentForm({ client }: AppointmentFormProps) {
         }),
       });
       
-      let data;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        data = await response.json();
-      } else {
-        const text = await response.text();
-        console.error('Non-JSON response received:', text);
-        throw new Error('O servidor retornou uma resposta inesperada. Por favor, tente novamente mais tarde.');
-      }
-
+      const data = await response.json();
       console.log('Server response:', data);
       
       if (response.ok && data.id) {

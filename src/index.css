@@ -6,9 +6,7 @@
   --font-display: "Playfair Display", serif;
   --color-primary: #D32F2F; /* Red */
   --color-accent: #FFEBEE; /* Light Red */
-  --color-ink: #007FFF; /* Azure Blue */
-  --color-azure: #007FFF;
-  --color-azure-light: #E0F2FF;
+  --color-ink: #001F3F; /* Navy Blue (replacing black) */
   --color-peach: #FF9F1C; /* Vibrant Orange (replacing peach) */
   --color-gray-custom: #808080; /* Gray */
   --color-paper: #FFFFFF; /* White */

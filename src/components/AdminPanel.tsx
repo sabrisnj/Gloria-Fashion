@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { ShieldCheck, LogOut, Package, Calendar, Users, Ticket, Settings, Plus, Edit2, Trash2, Check, X, MapPin, CheckCircle } from 'lucide-react';
+import { ShieldCheck, LogOut, Package, Calendar, Users, Ticket, Settings, Plus, Edit2, Trash2, Check, X, MapPin } from 'lucide-react';
 import { Product, Appointment, Client, Voucher, Visit } from '../types';
 import { formatCurrency } from '../utils';
 
@@ -39,23 +39,16 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
 
   const handleStatusChange = async (id: number, status: string) => {
     try {
-      const response = await fetch(`/api/admin/appointments/${id}`, {
+      await fetch(`/api/admin/appointments/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      if (response.ok) {
-        fetchData();
-      } else {
-        alert('Erro ao atualizar status.');
-      }
+      fetchData();
     } catch (error) {
       alert('Erro ao atualizar status.');
     }
   };
-
-  const pendingAppointments = appointments.filter(a => a.status === 'aguardando aprovação');
-  const otherAppointments = appointments.filter(a => a.status !== 'aguardando aprovação');
 
   const handleVisitStatusChange = async (id: number, status: string) => {
     try {
@@ -97,7 +90,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
           onClick={() => setActiveTab('appointments')} 
           icon={Calendar} 
           label="Agendamentos" 
-          badge={pendingAppointments.length}
+          badge={appointments.filter(a => a.status === 'aguardando aprovação').length}
         />
         <TabButton 
           active={activeTab === 'visits'} 
@@ -124,79 +117,53 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
           className="space-y-4"
         >
           {activeTab === 'appointments' && (
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <h2 className="font-display text-xl font-bold text-ink flex items-center gap-2">
-                  <Calendar className="text-primary" size={20} />
-                  Pendentes de Aprovação
-                </h2>
-                {pendingAppointments.length > 0 ? (
-                  pendingAppointments.map(a => (
-                    <div key={a.id} className="card space-y-3 border-peach/20 bg-peach/5">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-bold text-ink">{a.client_name}</h3>
-                          <a 
-                            href={`https://wa.me/${a.client_whatsapp?.replace(/\D/g, '')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary hover:underline flex items-center gap-1"
-                          >
-                            {a.client_whatsapp}
-                          </a>
-                        </div>
-                        <span className="text-[10px] px-2 py-1 rounded-full font-bold uppercase bg-yellow-100 text-yellow-600">
-                          Pendente
-                        </span>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg text-xs space-y-1 border border-peach/10">
-                        <p className="text-ink"><strong>Serviço:</strong> {a.service}</p>
-                        <p className="text-ink"><strong>Data/Hora:</strong> {a.date} às {a.time}</p>
-                        {a.referrer_phone && <p className="text-ink"><strong>Indicado por:</strong> {a.referrer_phone}</p>}
-                      </div>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => handleStatusChange(a.id, 'confirmado')}
-                          className="flex-grow flex items-center justify-center gap-1 bg-green-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-green-600 transition-all shadow-md shadow-green-200"
+            <div className="space-y-3">
+              <h2 className="font-display text-xl font-bold text-ink">Gerenciar Agendamentos</h2>
+              {appointments.length > 0 ? (
+                appointments.map(a => (
+                  <div key={a.id} className="card space-y-3 border-peach/20">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-ink">{a.client_name}</h3>
+                        <a 
+                          href={`https://wa.me/${a.client_whatsapp.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline flex items-center gap-1"
                         >
-                          <Check size={14} /> Aprovar
-                        </button>
-                        <button 
-                          onClick={() => handleStatusChange(a.id, 'cancelado')}
-                          className="flex-grow flex items-center justify-center gap-1 bg-red-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-red-600 transition-all shadow-md shadow-red-200"
-                        >
-                          <X size={14} /> Cancelar
-                        </button>
+                          {a.client_whatsapp}
+                        </a>
                       </div>
+                      <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${
+                        a.status === 'confirmado' ? 'bg-green-100 text-green-600' : 
+                        a.status === 'cancelado' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'
+                      }`}>
+                        {a.status}
+                      </span>
                     </div>
-                  ))
-                ) : (
-                  <div className="card bg-gray-50 text-center py-10 border-dashed border-gray-200">
-                    <CheckCircle className="text-green-300 mx-auto mb-2" size={32} />
-                    <p className="text-gray-custom italic text-sm">Tudo em dia! Nenhum agendamento pendente.</p>
+                    <div className="bg-gray-50 p-2 rounded-lg text-xs space-y-1 border border-gray-100">
+                      <p className="text-ink"><strong>Serviço:</strong> {a.service}</p>
+                      <p className="text-ink"><strong>Data/Hora:</strong> {a.date} às {a.time}</p>
+                      {a.referrer_phone && <p className="text-ink"><strong>Indicado por:</strong> {a.referrer_phone}</p>}
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleStatusChange(a.id, 'confirmado')}
+                        className="flex-grow flex items-center justify-center gap-1 bg-green-500 text-white py-2 rounded-lg text-xs font-bold hover:bg-green-600 transition-colors"
+                      >
+                        <Check size={14} /> Aprovar
+                      </button>
+                      <button 
+                        onClick={() => handleStatusChange(a.id, 'cancelado')}
+                        className="flex-grow flex items-center justify-center gap-1 bg-red-500 text-white py-2 rounded-lg text-xs font-bold hover:bg-red-600 transition-colors"
+                      >
+                        <X size={14} /> Cancelar
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
-
-              {otherAppointments.length > 0 && (
-                <div className="space-y-3 pt-4 border-t border-gray-100">
-                  <h2 className="font-display text-lg font-bold text-gray-custom">Histórico Recente</h2>
-                  <div className="space-y-2">
-                    {otherAppointments.slice(0, 5).map(a => (
-                      <div key={a.id} className="card p-3 flex items-center justify-between border-gray-100 opacity-80">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-xs text-ink">{a.client_name}</span>
-                          <span className="text-[10px] text-gray-custom">{a.service} • {a.date}</span>
-                        </div>
-                        <span className={`text-[8px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                          a.status === 'confirmado' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                        }`}>
-                          {a.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-400 italic py-10">Nenhum agendamento pendente.</p>
               )}
             </div>
           )}

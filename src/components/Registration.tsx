@@ -26,24 +26,10 @@ export function Registration({ onRegister, onAdminLogin }: RegistrationProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, whatsapp }),
       });
-      
-      let data;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        data = await response.json();
-      } else {
-        const text = await response.text();
-        console.error('Non-JSON response received:', text);
-        throw new Error('O servidor retornou uma resposta inesperada.');
-      }
-
-      if (response.ok) {
-        onRegister(data);
-      } else {
-        throw new Error(data.error || 'Erro ao realizar cadastro');
-      }
-    } catch (error: any) {
-      alert(error.message || 'Erro ao realizar cadastro. Tente novamente.');
+      const data = await response.json();
+      onRegister(data);
+    } catch (error) {
+      alert('Erro ao realizar cadastro. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -62,7 +48,7 @@ export function Registration({ onRegister, onAdminLogin }: RegistrationProps) {
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-paper relative overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute -top-20 -right-20 w-64 h-64 bg-peach/10 rounded-full blur-3xl" />
-      <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-azure/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
