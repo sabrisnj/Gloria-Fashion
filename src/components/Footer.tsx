@@ -7,9 +7,9 @@ export function Footer() {
         <div className="space-y-2">
           <div className="flex items-start gap-2">
             <MapPin size={16} className="text-primary shrink-0 mt-0.5" />
-            <p className="text-[11px] text-gray-300">
+            <p className="text-[11px] text-gray-400">
               R. Mal. Rondon, 113 – Loja 65 – Centro, SBC
-              <Phone size={12} className="inline-block text-red-500 mx-1" /> 
+              <span className="mx-1">•</span> 
               +55 11 95069-6045
             </p>
           </div>

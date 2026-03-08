@@ -26,9 +26,10 @@ const TIME_SLOTS = [
 
 interface AppointmentFormProps {
   client: Client | null;
+  onLogout?: () => void;
 }
 
-export function AppointmentForm({ client }: AppointmentFormProps) {
+export function AppointmentForm({ client, onLogout }: AppointmentFormProps) {
   const [step, setStep] = useState(1);
   const [service, setService] = useState('');
   const [date, setDate] = useState('');
@@ -70,12 +71,26 @@ export function AppointmentForm({ client }: AppointmentFormProps) {
         }),
       });
       
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text);
+        throw new Error('O servidor retornou uma resposta inesperada. Por favor, tente novamente mais tarde.');
+      }
+
       console.log('Server response:', data);
       
       if (response.ok && data.id) {
         setSuccess(true);
       } else {
+        if (response.status === 404 && onLogout) {
+          alert('Seu cadastro não foi encontrado no servidor. Por favor, realize o cadastro novamente.');
+          onLogout();
+          return;
+        }
         throw new Error(data.error || 'Erro ao agendar');
       }
     } catch (error: any) {

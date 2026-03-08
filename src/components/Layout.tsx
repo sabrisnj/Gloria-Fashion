@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
-import { AccessibilityMenu } from './AccessibilityMenu';
 import { Client } from '../types';
 
 interface LayoutProps {
@@ -9,13 +8,9 @@ interface LayoutProps {
   client: Client | null;
   isAdmin: boolean;
   onLogout: () => void;
-  accessibility: any;
-  setAccessibility: (a: any) => void;
 }
 
-export function Layout({ children, client, isAdmin, onLogout, accessibility, setAccessibility }: LayoutProps) {
-  const [isAccessibilityOpen, setIsAccessibilityOpen] = useState(false);
-
+export function Layout({ children, client, isAdmin, onLogout }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col bg-paper">
       <Navbar isAdmin={isAdmin} />
@@ -25,13 +20,6 @@ export function Layout({ children, client, isAdmin, onLogout, accessibility, set
       </main>
 
       <Footer />
-
-      <AccessibilityMenu 
-        isOpen={isAccessibilityOpen} 
-        onClose={() => setIsAccessibilityOpen(false)} 
-        accessibility={accessibility}
-        setAccessibility={setAccessibility}
-      />
     </div>
   );
 }

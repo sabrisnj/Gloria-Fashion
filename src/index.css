@@ -4,12 +4,14 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Playfair Display", serif;
-  --color-primary: #D32F2F; /* Red */
-  --color-accent: #FFEBEE; /* Light Red */
-  --color-ink: #001F3F; /* Navy Blue (replacing black) */
-  --color-peach: #FF9F1C; /* Vibrant Orange (replacing peach) */
-  --color-gray-custom: #808080; /* Gray */
-  --color-paper: #FFFFFF; /* White */
+  --color-primary: #E91E63; /* Elegant Pink/Rose */
+  --color-accent: #FCE4EC; /* Soft Pink */
+  --color-ink: #1A1A1A; /* Deep Charcoal */
+  --color-azure: #4A90E2; /* Soft Blue */
+  --color-azure-light: #F0F7FF;
+  --color-peach: #FFD700; /* Gold */
+  --color-gray-custom: #666666; /* Medium Gray */
+  --color-paper: #FAFAFA; /* Off-white */
 }
 
 body {

@@ -40,30 +40,29 @@ export function Catalog() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-orange-50/80 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-orange-200 text-ink relative overflow-hidden"
+        className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-ink relative overflow-hidden"
       >
-        <div className="relative z-10 space-y-4 text-center">
-          <div className="space-y-2">
-            <h2 className="text-xl font-display font-bold leading-tight text-primary">
-              Bem-vindo(a) à Glória Fashion!
+        <div className="relative z-10 space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-display font-bold leading-tight text-ink">
+              Bem-vinda à <span className="text-primary">Glória Fashion</span>
             </h2>
-            <p className="text-sm font-medium text-ink/80">
-              Estamos muito felizes em ter você aqui! 💖
+            <p className="text-xs font-medium text-gray-custom italic">
+              Seu espaço de beleza, estilo e atitude.
             </p>
           </div>
           
-          <p className="text-xs text-ink/70 leading-relaxed">
-            A Glória Fashion é um espaço feito para quem ama estilo, atitude e personalidade. Aqui você encontra joias, piercings, acessórios, presentes, moda e muito mais, além de serviços realizados com cuidado, higiene e profissionalismo.
+          <p className="text-xs text-gray-custom leading-relaxed">
+            Aqui você encontra joias, piercings, acessórios, presentes, moda e muito mais, além de serviços realizados com cuidado e profissionalismo.
           </p>
 
-          <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
-            <p className="text-[11px] leading-relaxed font-medium text-ink/80">
-              📣 Nosso serviço de divulgação ajuda de pequenos a grandes negócios e profissionais a alcançarem mais pessoas por meio de nossos perfis nas redes sociais, que contam com uma comunidade grande e engajada.
+          <div className="bg-accent p-4 rounded-2xl border border-primary/5">
+            <p className="text-[10px] leading-relaxed font-medium text-primary">
+              ✨ Nosso serviço de divulgação ajuda você a alcançar mais pessoas por meio de nossos perfis engajados nas redes sociais.
             </p>
           </div>
         </div>
         <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
-        <div className="absolute -left-10 -top-10 w-40 h-40 bg-peach/5 rounded-full blur-3xl" />
       </motion.div>
 
       <header className="space-y-4">
@@ -98,10 +97,10 @@ export function Catalog() {
       </header>
 
       {/* Collapsed Product List */}
-      <div className="card overflow-hidden border-peach/30 bg-white/50 backdrop-blur-sm">
+      <div className="card overflow-hidden border-gray-100 bg-white">
         <button 
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between p-5 text-left hover:bg-peach/5 transition-colors"
+          className="w-full flex items-center justify-between p-5 text-left hover:bg-accent transition-colors"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary">
@@ -123,7 +122,7 @@ export function Catalog() {
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <div className="px-5 pb-5 divide-y divide-peach/10">
+              <div className="px-5 pb-5 divide-y divide-gray-100">
                 {CATALOG_ITEMS.map((item, index) => (
                   <a 
                     key={index}
@@ -133,7 +132,7 @@ export function Catalog() {
                     className="flex items-center justify-between py-3 group hover:px-2 transition-all"
                   >
                     <div className="flex items-center gap-3">
-                      <Package size={14} className="text-primary/60" />
+                      <Package size={14} className="text-primary/40" />
                       <span className="text-sm font-medium text-ink group-hover:text-primary transition-colors">{item}</span>
                     </div>
                     <ExternalLink size={12} className="text-gray-300 group-hover:text-primary transition-colors" />
@@ -151,13 +150,13 @@ export function Catalog() {
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-primary text-white p-4 rounded-2xl shadow-lg relative overflow-hidden flex flex-col justify-center min-h-[100px]">
             <div className="relative z-10">
-              <h4 className="font-bold text-sm">Indique e ganhe 5%</h4>
+              <h4 className="font-bold text-sm leading-tight">Indique e ganhe 5%</h4>
             </div>
             <Heart className="absolute -right-4 -bottom-4 text-white/10" size={60} />
           </div>
           <div className="bg-ink text-white p-4 rounded-2xl shadow-lg relative overflow-hidden flex flex-col justify-center min-h-[100px]">
             <div className="relative z-10">
-              <h4 className="font-bold text-sm">Poste e Ganhe (3% OFF)</h4>
+              <h4 className="font-bold text-sm leading-tight">Poste e Ganhe (3% OFF)</h4>
             </div>
             <ShoppingBag className="absolute -right-4 -bottom-4 text-white/10" size={60} />
           </div>

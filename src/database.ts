@@ -6,6 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const db = new Database(path.join(__dirname, 'gloria_fashion.db'));
+db.pragma('foreign_keys = ON');
 
 // Initialize tables
 db.exec(`

@@ -22,12 +22,6 @@ export default function App() {
     return localStorage.getItem('gloria_admin') === 'true';
   });
 
-  const [accessibility, setAccessibility] = useState({
-    fontSize: 100,
-    highContrast: false,
-    simplifiedMode: false,
-  });
-
   useEffect(() => {
     if (client) {
       localStorage.setItem('gloria_client', JSON.stringify(client));
@@ -49,28 +43,23 @@ export default function App() {
     setIsAdmin(false);
   };
 
-  const accessibilityStyles = {
-    fontSize: `${accessibility.fontSize}%`,
-    filter: accessibility.highContrast ? 'contrast(1.5) grayscale(0.5)' : 'none',
-  };
-
   if (!client && !isAdmin) {
     return (
-      <div style={accessibilityStyles}>
+      <div>
         <Registration onRegister={setClient} onAdminLogin={() => setIsAdmin(true)} />
       </div>
     );
   }
 
   return (
-    <div style={accessibilityStyles} className={accessibility.simplifiedMode ? 'simplified-mode' : ''}>
+    <div>
       <Router>
-        <Layout client={client} isAdmin={isAdmin} onLogout={handleLogout} accessibility={accessibility} setAccessibility={setAccessibility}>
+        <Layout client={client} isAdmin={isAdmin} onLogout={handleLogout}>
           <Routes>
             <Route path="/" element={<Catalog />} />
-            <Route path="/agendar" element={<AppointmentForm client={client} />} />
+            <Route path="/agendar" element={<AppointmentForm client={client} onLogout={handleLogout} />} />
             <Route path="/pagamento" element={<Payment client={client} />} />
-            <Route path="/perfil" element={<Profile client={client} onLogout={handleLogout} accessibility={accessibility} setAccessibility={setAccessibility} />} />
+            <Route path="/perfil" element={<Profile client={client} onLogout={handleLogout} />} />
             <Route path="/guia" element={<Guide />} />
             <Route path="/suporte" element={<Support />} />
             <Route path="/privacidade" element={<PrivacyPolicy />} />

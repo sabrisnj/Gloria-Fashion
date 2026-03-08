@@ -16,7 +16,7 @@ export function Support() {
             <h2 className="font-display text-2xl font-bold">Ouvidoria Ivone</h2>
           </div>
           <p className="text-sm leading-relaxed opacity-90">
-            Caso tenha qualquer dúvida ou sugestão, utilize a seção "Ouvidoria Ivone" dentro do menu de Atendimento (Chat).
+            Caso tenha qualquer dúvida ou sugestão, entre em contato conosco diretamente pelo WhatsApp.
             Sua voz é fundamental para mantermos o padrão premium do nosso studio.
           </p>
           <a 
@@ -53,7 +53,7 @@ export function Support() {
             label="Facebook" 
             value="Gloria Ferreira" 
             href="https://facebook.com/GloriaFerreira"
-            color="bg-blue-100 text-blue-600"
+            color="bg-azure/10 text-azure"
           />
           <ContactCard 
             icon={MapPin} 

@@ -21,7 +21,7 @@ export function Navbar({ isAdmin }: NavbarProps) {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 z-50 flex justify-around items-center shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-gray-100 px-4 py-2 z-50 flex justify-around items-center shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
       {navItems.map((item) => {
         const isActive = location.pathname === item.path;
         return (
@@ -29,12 +29,12 @@ export function Navbar({ isAdmin }: NavbarProps) {
             key={item.path}
             to={item.path}
             className={cn(
-              "flex flex-col items-center gap-1 p-2 transition-colors",
-              isActive ? "text-primary" : "text-gray-400"
+              "flex flex-col items-center gap-1 p-2 transition-all",
+              isActive ? "text-primary scale-110" : "text-gray-400"
             )}
           >
-            <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-            <span className="text-[10px] font-medium uppercase tracking-wider">{item.label}</span>
+            <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+            <span className="text-[9px] font-bold uppercase tracking-widest">{item.label}</span>
           </Link>
         );
       })}

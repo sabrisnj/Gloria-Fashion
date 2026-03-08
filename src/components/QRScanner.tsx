@@ -56,11 +56,24 @@ export function QRScanner({ client }: QRScannerProps) {
           is_manual: isManual
         }),
       });
+      
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text);
+        throw new Error('O servidor retornou uma resposta inesperada.');
+      }
+
       if (response.ok) {
         setSuccess(true);
+      } else {
+        throw new Error(data.error || 'Erro ao realizar check-in');
       }
-    } catch (error) {
-      alert('Erro ao realizar check-in.');
+    } catch (error: any) {
+      alert(error.message || 'Erro ao realizar check-in.');
     } finally {
       setLoading(false);
     }

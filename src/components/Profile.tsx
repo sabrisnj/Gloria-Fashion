@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { User, LogOut, Bell, History, Ticket, Star, Share2, Camera, Type, Eye, Layout, Volume2, ChevronDown, ChevronUp, Shield, HelpCircle, BookOpen, Smartphone, UserPlus, Calendar as CalendarIcon, ShoppingBag, Gift, QrCode, Accessibility } from 'lucide-react';
+import { User, LogOut, Bell, History, Ticket, Star, Share2, Camera, Shield, HelpCircle, BookOpen, Smartphone, UserPlus, Calendar as CalendarIcon, ShoppingBag, Gift, QrCode, ChevronDown, ChevronUp } from 'lucide-react';
 import { Client, Voucher, Appointment } from '../types';
 import { parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -8,11 +8,9 @@ import { ptBR } from 'date-fns/locale';
 interface ProfileProps {
   client: Client | null;
   onLogout: () => void;
-  accessibility: any;
-  setAccessibility: (a: any) => void;
 }
 
-export function Profile({ client, onLogout, accessibility, setAccessibility }: ProfileProps) {
+export function Profile({ client, onLogout }: ProfileProps) {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(client?.notifications_enabled === 1);
@@ -55,56 +53,6 @@ export function Profile({ client, onLogout, accessibility, setAccessibility }: P
           <LogOut size={20} />
         </button>
       </header>
-
-      {/* Acessibilidade Section - Now Collapsible */}
-      <CollapsibleSection 
-        title="Acessibilidade" 
-        icon={Accessibility}
-      >
-        <div className="space-y-6 pt-4">
-          <div className="space-y-3">
-            <p className="text-xs font-bold uppercase text-gray-custom">Tamanho do Texto</p>
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setAccessibility({ ...accessibility, fontSize: Math.max(80, accessibility.fontSize - 10) })}
-                className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center font-bold text-ink"
-              >
-                A-
-              </button>
-              <div className="flex-grow h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-primary transition-all" style={{ width: `${(accessibility.fontSize - 80) / 120 * 100}%` }} />
-              </div>
-              <button 
-                onClick={() => setAccessibility({ ...accessibility, fontSize: Math.min(200, accessibility.fontSize + 10) })}
-                className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center font-bold text-ink"
-              >
-                A+
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3">
-            <AccessibilityToggle 
-              active={accessibility.highContrast} 
-              onClick={() => setAccessibility({ ...accessibility, highContrast: !accessibility.highContrast })}
-              icon={Eye}
-              label="Alto Contraste"
-            />
-            <AccessibilityToggle 
-              active={accessibility.simplifiedMode} 
-              onClick={() => setAccessibility({ ...accessibility, simplifiedMode: !accessibility.simplifiedMode })}
-              icon={Layout}
-              label="Modo Leitura Simplificada"
-            />
-            <AccessibilityToggle 
-              active={accessibility.narration} 
-              onClick={() => setAccessibility({ ...accessibility, narration: !accessibility.narration })}
-              icon={Volume2}
-              label="🔊 Narração"
-            />
-          </div>
-        </div>
-      </CollapsibleSection>
 
       <section className="space-y-4">
         <h2 className="font-display text-xl font-bold flex items-center gap-2 text-ink">
@@ -225,7 +173,7 @@ export function Profile({ client, onLogout, accessibility, setAccessibility }: P
             rel="noopener noreferrer"
             className="card flex items-center gap-4 hover:bg-peach/10 transition-colors border-peach/20"
           >
-            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 bg-azure/10 text-azure rounded-full flex items-center justify-center shrink-0">
               <Star size={20} />
             </div>
             <div>
@@ -490,19 +438,6 @@ export function Profile({ client, onLogout, accessibility, setAccessibility }: P
                 <p className="mt-2">O check-in também registra indicações — se você informar o telefone de quem te indicou, essa pessoa ganha um cupom de 5%.</p>
               </div>
             </GuideItem>
-
-            <GuideItem title="Acessibilidade" icon={Accessibility}>
-              <div className="space-y-2 text-sm text-gray-custom">
-                <p>O app oferece opções de acessibilidade no seu Perfil → Configurações:</p>
-                <ul className="list-disc ml-4 text-xs space-y-1">
-                  <li><span className="font-bold">Texto maior</span> — Aumenta o tamanho da fonte para melhor leitura</li>
-                  <li><span className="font-bold">Alto contraste</span> — Aumenta o contraste para melhor visibilidade</li>
-                  <li><span className="font-bold">Modo leitura</span> — Fundo claro com texto escuro para leitura prolongada</li>
-                  <li><span className="font-bold">Narração por voz</span> — Essa opção narra sua navegação por cada aba do app.</li>
-                </ul>
-                <p className="mt-2 italic">Essas configurações são salvas automaticamente.</p>
-              </div>
-            </GuideItem>
           </div>
         </CollapsibleSection>
       </div>
@@ -557,24 +492,5 @@ function GuideItem({ title, icon: Icon, children }: any) {
         </div>
       )}
     </div>
-  );
-}
-
-function AccessibilityToggle({ active, onClick, icon: Icon, label }: any) {
-  return (
-    <button 
-      onClick={onClick}
-      className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
-        active ? 'border-primary bg-accent text-primary' : 'border-gray-100 text-gray-500'
-      }`}
-    >
-      <div className="flex items-center gap-3">
-        <Icon size={20} />
-        <span className="text-sm font-bold uppercase">{label}</span>
-      </div>
-      <div className={`w-10 h-5 rounded-full relative transition-colors ${active ? 'bg-primary' : 'bg-gray-200'}`}>
-        <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${active ? 'left-6' : 'left-1'}`} />
-      </div>
-    </button>
   );
 }
