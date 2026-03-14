@@ -20,6 +20,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   const [modal, setModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
+  const [appointmentFilter, setAppointmentFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
 
   useEffect(() => {
     fetchData();
@@ -64,7 +65,14 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
   };
 
   const pendingAppointments = appointments.filter(a => a.status === 'aguardando aprovação');
-  const otherAppointments = appointments.filter(a => a.status !== 'aguardando aprovação');
+  
+  const filteredAppointments = appointments.filter(a => {
+    if (appointmentFilter === 'all') return true;
+    if (appointmentFilter === 'pending') return a.status === 'aguardando aprovação';
+    if (appointmentFilter === 'confirmed') return a.status === 'confirmado';
+    if (appointmentFilter === 'cancelled') return a.status === 'cancelado';
+    return true;
+  });
 
   const handleVisitStatusChange = async (id: number, status: string) => {
     try {
@@ -216,14 +224,43 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
         >
           {activeTab === 'appointments' && (
             <div className="space-y-6">
+              <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                <button 
+                  onClick={() => setAppointmentFilter('all')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${appointmentFilter === 'all' ? 'bg-primary text-white shadow-md' : 'bg-white text-gray-custom border border-gray-100'}`}
+                >
+                  Todos
+                </button>
+                <button 
+                  onClick={() => setAppointmentFilter('pending')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${appointmentFilter === 'pending' ? 'bg-primary text-white shadow-md' : 'bg-white text-gray-custom border border-gray-100'}`}
+                >
+                  Pendentes
+                </button>
+                <button 
+                  onClick={() => setAppointmentFilter('confirmed')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${appointmentFilter === 'confirmed' ? 'bg-primary text-white shadow-md' : 'bg-white text-gray-custom border border-gray-100'}`}
+                >
+                  Confirmados
+                </button>
+                <button 
+                  onClick={() => setAppointmentFilter('cancelled')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${appointmentFilter === 'cancelled' ? 'bg-primary text-white shadow-md' : 'bg-white text-gray-custom border border-gray-100'}`}
+                >
+                  Cancelados
+                </button>
+              </div>
+
               <div className="space-y-3">
                 <h2 className="font-display text-xl font-bold text-ink flex items-center gap-2">
                   <Calendar className="text-primary" size={20} />
-                  Pendentes de Aprovação
+                  {appointmentFilter === 'all' ? 'Todos os Agendamentos' : 
+                   appointmentFilter === 'pending' ? 'Agendamentos Pendentes' :
+                   appointmentFilter === 'confirmed' ? 'Agendamentos Confirmados' : 'Agendamentos Cancelados'}
                 </h2>
-                {pendingAppointments.length > 0 ? (
-                  pendingAppointments.map(a => (
-                    <div key={a.id} className="card space-y-3 border-peach/20 bg-peach/5">
+                {filteredAppointments.length > 0 ? (
+                  filteredAppointments.map(a => (
+                    <div key={a.id} className={`card space-y-3 border-peach/20 ${a.status === 'aguardando aprovação' ? 'bg-peach/5' : 'opacity-90'}`}>
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className="font-bold text-ink">{a.client_name}</h3>
@@ -236,8 +273,12 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                             {a.client_whatsapp}
                           </a>
                         </div>
-                        <span className="text-[10px] px-2 py-1 rounded-full font-bold uppercase bg-yellow-100 text-yellow-600">
-                          Pendente
+                        <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${
+                          a.status === 'aguardando aprovação' ? 'bg-yellow-100 text-yellow-600' :
+                          a.status === 'confirmado' ? 'bg-green-100 text-green-600' :
+                          a.status === 'cancelado' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                        }`}>
+                          {a.status === 'aguardando aprovação' ? 'Pendente' : a.status}
                         </span>
                       </div>
                       <div className="bg-white p-3 rounded-lg text-xs space-y-1 border border-peach/10">
@@ -246,57 +287,56 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                         {a.referrer_phone && <p className="text-ink"><strong>Indicado por:</strong> {a.referrer_phone}</p>}
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <button 
-                          onClick={() => handleStatusChange(a.id, 'confirmado')}
-                          className="flex-grow flex items-center justify-center gap-1 bg-green-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-green-600 transition-all shadow-md shadow-green-200"
-                        >
-                          <Check size={14} /> Aprovar
-                        </button>
+                        {a.status === 'aguardando aprovação' && (
+                          <button 
+                            onClick={() => handleStatusChange(a.id, 'confirmado')}
+                            className="flex-grow flex items-center justify-center gap-1 bg-green-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-green-600 transition-all shadow-md shadow-green-200"
+                          >
+                            <Check size={14} /> Aprovar
+                          </button>
+                        )}
+                        {a.status === 'confirmado' && (
+                           <button 
+                            onClick={() => handleStatusChange(a.id, 'cancelado')}
+                            className="flex-grow flex items-center justify-center gap-1 bg-red-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-red-600 transition-all shadow-md shadow-red-200"
+                           >
+                             <X size={14} /> Cancelar
+                           </button>
+                        )}
+                        {a.status === 'cancelado' && (
+                           <button 
+                            onClick={() => handleStatusChange(a.id, 'confirmado')}
+                            className="flex-grow flex items-center justify-center gap-1 bg-green-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-green-600 transition-all shadow-md shadow-green-200"
+                           >
+                             <Check size={14} /> Reativar
+                           </button>
+                        )}
                         <a 
-                          href={`https://wa.me/${a.client_whatsapp?.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${a.client_name}! Aqui é da Glória Fashion. Gostaria de confirmar seu agendamento para ${a.service} no dia ${a.date} às ${a.time}. Podemos confirmar?`)}`}
+                          href={`https://wa.me/${a.client_whatsapp?.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${a.client_name}! Aqui é da Glória Fashion. Gostaria de falar sobre seu agendamento para ${a.service} no dia ${a.date} às ${a.time}.`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-grow flex items-center justify-center gap-1 bg-blue-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-blue-600 transition-all shadow-md shadow-blue-200"
                         >
                           <MessageSquare size={14} /> WhatsApp
                         </a>
-                        <button 
-                          onClick={() => handleStatusChange(a.id, 'cancelado')}
-                          className="flex-grow flex items-center justify-center gap-1 bg-red-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-red-600 transition-all shadow-md shadow-red-200"
-                        >
-                          <X size={14} /> Cancelar
-                        </button>
+                        {a.status === 'aguardando aprovação' && (
+                          <button 
+                            onClick={() => handleStatusChange(a.id, 'cancelado')}
+                            className="flex-grow flex items-center justify-center gap-1 bg-red-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-red-600 transition-all shadow-md shadow-red-200"
+                          >
+                            <X size={14} /> Cancelar
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className="card bg-gray-50 text-center py-10 border-dashed border-gray-200">
                     <CheckCircle className="text-green-300 mx-auto mb-2" size={32} />
-                    <p className="text-gray-custom italic text-sm">Tudo em dia! Nenhum agendamento pendente.</p>
+                    <p className="text-gray-custom italic text-sm">Nenhum agendamento encontrado para este filtro.</p>
                   </div>
                 )}
               </div>
-
-              {otherAppointments.length > 0 && (
-                <div className="space-y-3 pt-4 border-t border-gray-100">
-                  <h2 className="font-display text-lg font-bold text-gray-custom">Histórico Recente</h2>
-                  <div className="space-y-2">
-                    {otherAppointments.slice(0, 5).map(a => (
-                      <div key={a.id} className="card p-3 flex items-center justify-between border-gray-100 opacity-80">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-xs text-ink">{a.client_name}</span>
-                          <span className="text-[10px] text-gray-custom">{a.service} • {a.date}</span>
-                        </div>
-                        <span className={`text-[8px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                          a.status === 'confirmado' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                        }`}>
-                          {a.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 

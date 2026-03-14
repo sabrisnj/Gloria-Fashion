@@ -64,7 +64,7 @@ export function Registration({ onRegister, onAdminLogin }: RegistrationProps) {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminPassword === 'Gloria_Fashion') {
+    if (adminPassword === 'Gloria2026') {
       onAdminLogin();
     } else {
       setToast({ message: 'Senha administrativa incorreta.', type: 'error' });
