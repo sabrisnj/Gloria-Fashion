@@ -70,10 +70,12 @@ export function QRScanner({ client }: QRScannerProps) {
       if (response.ok) {
         setSuccess(true);
       } else {
-        throw new Error(data.error || 'Erro ao realizar check-in');
+        const errorMsg = typeof data.error === 'string' ? data.error : (data.error?.message || 'Erro ao realizar check-in');
+        throw new Error(errorMsg);
       }
     } catch (error: any) {
-      alert(error.message || 'Erro ao realizar check-in.');
+      const errorMessage = error.message || 'Erro ao realizar check-in.';
+      alert(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setLoading(false);
     }

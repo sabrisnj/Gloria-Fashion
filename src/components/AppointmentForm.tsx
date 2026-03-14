@@ -119,11 +119,13 @@ export function AppointmentForm({ client }: AppointmentFormProps) {
       if (response.ok && data.id) {
         setSuccess(true);
       } else {
-        throw new Error(data.error || 'Erro ao agendar');
+        const errorMsg = typeof data.error === 'string' ? data.error : (data.error?.message || 'Erro ao agendar');
+        throw new Error(errorMsg);
       }
     } catch (error: any) {
       console.error('Appointment submission error:', error);
-      alert(error.message || 'Erro ao agendar. Tente novamente.');
+      const errorMessage = error.message || 'Erro ao agendar. Tente novamente.';
+      alert(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setLoading(false);
     }

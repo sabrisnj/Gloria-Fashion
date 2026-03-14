@@ -55,11 +55,13 @@ export function Registration({ onRegister, onAdminLogin }: RegistrationProps) {
       if (response.ok) {
         onRegister(data);
       } else {
-        throw new Error(data.error || 'Erro ao realizar cadastro');
+        const errorMsg = typeof data.error === 'string' ? data.error : (data.error?.message || 'Erro ao realizar cadastro');
+        throw new Error(errorMsg);
       }
     } catch (err: any) {
       console.error('Registration error:', err);
-      setError(err.message || 'Erro ao realizar cadastro. Tente novamente.');
+      const errorMessage = err.message || 'Erro ao realizar cadastro. Tente novamente.';
+      setError(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setLoading(false);
     }

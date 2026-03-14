@@ -48,9 +48,14 @@ export function Payment({ client }: PaymentProps) {
       });
       if (response.ok) {
         setSuccess(true);
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMsg = typeof data.error === 'string' ? data.error : (data.error?.message || 'Erro ao realizar check-in');
+        throw new Error(errorMsg);
       }
-    } catch (error) {
-      alert('Erro ao realizar check-in.');
+    } catch (error: any) {
+      const errorMessage = error.message || 'Erro ao realizar check-in.';
+      alert(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setLoading(false);
     }
