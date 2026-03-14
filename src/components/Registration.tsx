@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Shield, Lock } from 'lucide-react';
 import { Client } from '../types';
+import { Toast, ToastType } from './Toast';
 
 interface RegistrationProps {
   onRegister: (client: Client) => void;
@@ -15,6 +16,7 @@ export function Registration({ onRegister, onAdminLogin }: RegistrationProps) {
   const [showAdmin, setShowAdmin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,8 +26,6 @@ export function Registration({ onRegister, onAdminLogin }: RegistrationProps) {
     setError(null);
     try {
       const apiUrl = '/api/register';
-      console.log(`[DEBUG] Fetching: ${window.location.origin}${apiUrl}`);
-      
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 
@@ -35,22 +35,17 @@ export function Registration({ onRegister, onAdminLogin }: RegistrationProps) {
         body: JSON.stringify({ name, whatsapp }),
       });
       
-      console.log(`[DEBUG] Response Status: ${response.status} (${response.statusText})`);
-      
       let data;
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") !== -1) {
         data = await response.json();
       } else {
         const text = await response.text();
-        console.error('Non-JSON response received:', text);
         if (response.status === 404) {
-          throw new Error('Erro 404: A rota da API não foi encontrada. Verifique se o servidor backend está configurado corretamente.');
+          throw new Error('Erro 404: A rota da API não foi encontrada.');
         }
-        throw new Error(`Erro no servidor (${response.status}). O servidor não retornou JSON. Detalhes: ${text.substring(0, 100)}...`);
+        throw new Error(`Erro no servidor (${response.status}).`);
       }
-
-      console.log('Registration response:', data);
 
       if (response.ok) {
         onRegister(data);
@@ -61,7 +56,7 @@ export function Registration({ onRegister, onAdminLogin }: RegistrationProps) {
     } catch (err: any) {
       console.error('Registration error:', err);
       const errorMessage = err.message || 'Erro ao realizar cadastro. Tente novamente.';
-      setError(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -72,12 +67,21 @@ export function Registration({ onRegister, onAdminLogin }: RegistrationProps) {
     if (adminPassword === 'Gloria_Fashion') {
       onAdminLogin();
     } else {
-      alert('Senha administrativa incorreta.');
+      setToast({ message: 'Senha administrativa incorreta.', type: 'error' });
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-paper relative overflow-hidden">
+      <AnimatePresence>
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </AnimatePresence>
       {/* Decorative elements */}
       <div className="absolute -top-20 -right-20 w-64 h-64 bg-peach/10 rounded-full blur-3xl" />
       <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-azure/10 rounded-full blur-3xl" />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   CreditCard, 
   Wallet, 
@@ -11,6 +11,7 @@ import {
   Info
 } from 'lucide-react';
 import { Client } from '../types';
+import { Toast, ToastType } from './Toast';
 
 interface PaymentProps {
   client: Client | null;
@@ -21,6 +22,7 @@ export function Payment({ client }: PaymentProps) {
   const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const pixKey = "11967554525";
 
@@ -32,7 +34,7 @@ export function Payment({ client }: PaymentProps) {
 
   const handleCheckIn = async () => {
     if (!client || !referralCode) {
-      alert('Por favor, informe o código de indicação ou voucher.');
+      setToast({ message: 'Por favor, informe o código de indicação ou voucher.', type: 'error' });
       return;
     }
     setLoading(true);
@@ -55,7 +57,7 @@ export function Payment({ client }: PaymentProps) {
       }
     } catch (error: any) {
       const errorMessage = error.message || 'Erro ao realizar check-in.';
-      alert(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+      setToast({ message: errorMessage, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -89,6 +91,15 @@ export function Payment({ client }: PaymentProps) {
 
   return (
     <div className="space-y-8 pb-10">
+      <AnimatePresence>
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </AnimatePresence>
       <header className="space-y-2">
         <h1 className="text-3xl font-display font-bold text-ink uppercase tracking-tight">Pagamento</h1>
         <p className="text-xs text-gray-custom font-bold uppercase tracking-widest">Escolha sua forma de pagamento</p>

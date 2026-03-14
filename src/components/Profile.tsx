@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { User, LogOut, Bell, History, Ticket, Star, Share2, Camera, Type, Eye, Layout, Volume2, ChevronDown, ChevronUp, Shield, HelpCircle, BookOpen, Smartphone, UserPlus, Calendar as CalendarIcon, ShoppingBag, Gift, QrCode, Accessibility, Clock } from 'lucide-react';
 import { Client, Voucher, Appointment } from '../types';
 import { parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Toast, ToastType } from './Toast';
 
 interface ProfileProps {
   client: Client | null;
@@ -17,6 +18,7 @@ export function Profile({ client, onLogout, accessibility, setAccessibility }: P
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(client?.notifications_enabled === 1);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   useEffect(() => {
     if (client) {
@@ -43,6 +45,15 @@ export function Profile({ client, onLogout, accessibility, setAccessibility }: P
 
   return (
     <div className="space-y-8">
+      <AnimatePresence>
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </AnimatePresence>
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white shadow-lg">
@@ -211,7 +222,7 @@ export function Profile({ client, onLogout, accessibility, setAccessibility }: P
                   navigator.share(shareData);
                 } else {
                   navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
-                  alert('Link e código copiados para a área de transferência!');
+                  setToast({ message: 'Link e código copiados para a área de transferência!', type: 'info' });
                 }
               }}
               className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-primary/20"

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { QrCode, CheckCircle, Smartphone, UserPlus } from 'lucide-react';
 import { Client } from '../types';
+import { Toast, ToastType } from './Toast';
 
 interface QRScannerProps {
   client: Client | null;
@@ -15,6 +16,7 @@ export function QRScanner({ client }: QRScannerProps) {
   const [referrer, setReferrer] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   useEffect(() => {
     if (scanning && !success && !isManual) {
@@ -75,7 +77,7 @@ export function QRScanner({ client }: QRScannerProps) {
       }
     } catch (error: any) {
       const errorMessage = error.message || 'Erro ao realizar check-in.';
-      alert(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+      setToast({ message: errorMessage, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -119,6 +121,15 @@ export function QRScanner({ client }: QRScannerProps) {
 
   return (
     <div className="space-y-6">
+      <AnimatePresence>
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </AnimatePresence>
       <header className="space-y-2">
         <h1 className="text-3xl font-display font-bold text-ink">Check-in na Loja</h1>
         <p className="text-sm text-gray-500 italic">Escaneie o QR Code ou faça o check-in manual.</p>

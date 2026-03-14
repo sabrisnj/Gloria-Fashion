@@ -1,9 +1,11 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, LogOut, Package, Calendar, Users, Ticket, Settings, Plus, Edit2, Trash2, Check, X, MapPin, CheckCircle, MessageSquare } from 'lucide-react';
 import { Product, Appointment, Client, Voucher, Visit } from '../types';
 import { formatCurrency } from '../utils';
 import { CATALOG_ITEMS } from '../constants';
+import { Toast, ToastType } from './Toast';
+import { Modal } from './Modal';
 
 interface AdminPanelProps {
   onLogout: () => void;
@@ -16,6 +18,8 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
   const [visits, setVisits] = useState<Visit[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  const [modal, setModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -49,12 +53,13 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
         body: JSON.stringify({ status }),
       });
       if (response.ok) {
+        setToast({ message: `Status atualizado para ${status}`, type: 'success' });
         fetchData();
       } else {
-        alert('Erro ao atualizar status.');
+        setToast({ message: 'Erro ao atualizar status.', type: 'error' });
       }
     } catch (error) {
-      alert('Erro ao atualizar status.');
+      setToast({ message: 'Erro ao atualizar status.', type: 'error' });
     }
   };
 
@@ -63,31 +68,44 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
 
   const handleVisitStatusChange = async (id: number, status: string) => {
     try {
-      await fetch(`/api/visits?id=${id}`, {
+      const response = await fetch(`/api/visits?id=${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      fetchData();
+      if (response.ok) {
+        setToast({ message: `Check-in ${status}`, type: 'success' });
+        fetchData();
+      } else {
+        setToast({ message: 'Erro ao atualizar status da visita.', type: 'error' });
+      }
     } catch (error) {
-      alert('Erro ao atualizar status da visita.');
+      setToast({ message: 'Erro ao atualizar status da visita.', type: 'error' });
     }
   };
 
-  const handleDeleteProduct = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-    try {
-      const response = await fetch(`/api/admin/products?id=${id}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
-        fetchData();
-      } else {
-        alert('Erro ao excluir produto.');
+  const handleDeleteProduct = (id: number) => {
+    setModal({
+      isOpen: true,
+      title: 'Excluir Produto',
+      message: 'Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/admin/products?id=${id}`, {
+            method: 'DELETE'
+          });
+          if (response.ok) {
+            setToast({ message: 'Produto excluído com sucesso.', type: 'success' });
+            fetchData();
+          } else {
+            setToast({ message: 'Erro ao excluir produto.', type: 'error' });
+          }
+        } catch (error) {
+          setToast({ message: 'Erro ao excluir produto.', type: 'error' });
+        }
+        setModal(null);
       }
-    } catch (error) {
-      alert('Erro ao excluir produto.');
-    }
+    });
   };
 
   const [newProduct, setNewProduct] = useState({
@@ -111,19 +129,40 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
         }),
       });
       if (response.ok) {
+        setToast({ message: 'Produto adicionado com sucesso.', type: 'success' });
         setNewProduct({ name: '', description: '', price: '', category: 'Body piercing', image_url: '' });
         setShowAddProduct(false);
         fetchData();
       } else {
-        alert('Erro ao adicionar produto.');
+        setToast({ message: 'Erro ao adicionar produto.', type: 'error' });
       }
     } catch (error) {
-      alert('Erro ao adicionar produto.');
+      setToast({ message: 'Erro ao adicionar produto.', type: 'error' });
     }
   };
 
   return (
     <div className="space-y-6">
+      <AnimatePresence>
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </AnimatePresence>
+
+      {modal && (
+        <Modal 
+          isOpen={modal.isOpen}
+          title={modal.title}
+          message={modal.message}
+          onConfirm={modal.onConfirm}
+          onCancel={() => setModal(null)}
+          type="danger"
+        />
+      )}
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-ink text-white rounded-xl flex items-center justify-center shadow-lg border-2 border-peach/20">

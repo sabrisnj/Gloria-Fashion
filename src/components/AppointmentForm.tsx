@@ -5,6 +5,7 @@ import { Client, Appointment } from '../types';
 import { parseISO, format, addDays, startOfToday, isSunday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
+import { Toast, ToastType } from './Toast';
 
 const SERVICES = [
   "Colocação de Piercing (Orelha)",
@@ -28,14 +29,13 @@ export function AppointmentForm({ client }: AppointmentFormProps) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [referrer, setReferrer] = useState('');
-  const [consent, setConsent] = useState(false);
-  const [notifications, setNotifications] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [loadingTimes, setLoadingTimes] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   useEffect(() => {
     if (date) {
@@ -71,22 +71,12 @@ export function AppointmentForm({ client }: AppointmentFormProps) {
   }, [client, success]);
 
   const handleSubmit = async () => {
-    if (!client || !service || !date || !time || !consent) {
-      alert('Por favor, preencha todos os campos e aceite os termos.');
+    if (!client || !service || !date || !time) {
+      setToast({ message: 'Por favor, preencha todos os campos.', type: 'error' });
       return;
     }
     setLoading(true);
     try {
-      console.log('Submitting appointment:', {
-        client_id: client.id,
-        service,
-        date,
-        time,
-        referrer_phone: referrer || null,
-        consent: 1,
-        notifications: notifications ? 1 : 0
-      });
-
       const response = await fetch('/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,9 +85,7 @@ export function AppointmentForm({ client }: AppointmentFormProps) {
           service,
           date,
           time,
-          referrer_phone: referrer || null,
-          consent: 1,
-          notifications: notifications ? 1 : 0
+          referrer_phone: referrer || null
         }),
       });
       
@@ -109,13 +97,11 @@ export function AppointmentForm({ client }: AppointmentFormProps) {
         const text = await response.text();
         console.error('Non-JSON response received:', text);
         if (response.status === 404) {
-          throw new Error('Erro 404: A rota da API não foi encontrada. Verifique se o servidor backend está configurado corretamente.');
+          throw new Error('Erro 404: A rota da API não foi encontrada.');
         }
-        throw new Error(`Erro no servidor (${response.status}). O servidor não retornou JSON. Detalhes: ${text.substring(0, 100)}...`);
+        throw new Error(`Erro no servidor (${response.status}).`);
       }
 
-      console.log('Server response:', data);
-      
       if (response.ok && data.id) {
         setSuccess(true);
       } else {
@@ -125,7 +111,7 @@ export function AppointmentForm({ client }: AppointmentFormProps) {
     } catch (error: any) {
       console.error('Appointment submission error:', error);
       const errorMessage = error.message || 'Erro ao agendar. Tente novamente.';
-      alert(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+      setToast({ message: errorMessage, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -166,6 +152,15 @@ export function AppointmentForm({ client }: AppointmentFormProps) {
 
   return (
     <div className="space-y-6">
+      <AnimatePresence>
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </AnimatePresence>
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-display font-bold text-ink">Agendar</h1>
@@ -337,53 +332,13 @@ export function AppointmentForm({ client }: AppointmentFormProps) {
                   onChange={(e) => setReferrer(e.target.value)}
                 />
               </div>
-
-              <div className="space-y-4 pt-2">
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <div className="relative flex items-center mt-1">
-                    <input 
-                      type="checkbox" 
-                      className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-gray-300 checked:bg-primary checked:border-primary transition-all"
-                      checked={notifications}
-                      onChange={(e) => setNotifications(e.target.checked)}
-                    />
-                    <CheckCircle className="absolute h-5 w-5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
-                  </div>
-                  <span className="text-xs text-gray-custom leading-tight">Aceito receber notificações sobre meu agendamento e promoções exclusivas via WhatsApp.</span>
-                </label>
-
-                <div className="card bg-gray-50 p-4 space-y-3 border-gray-100">
-                  <h4 className="text-[10px] font-bold uppercase text-gray-custom">Termo de Responsabilidade e Consentimento</h4>
-                  <div className="max-h-32 overflow-y-auto text-[10px] text-gray-custom space-y-2 pr-2 custom-scrollbar">
-                    <p>Ao prosseguir com este agendamento para aplicação de piercing ou alargamento, declaro estar ciente de que:</p>
-                    <ul className="list-disc pl-4 space-y-1">
-                      <li>O procedimento envolve riscos inerentes, como inflamações ou reações alérgicas, se os cuidados pós-procedimento não forem seguidos.</li>
-                      <li>Comprometo-me a seguir todas as orientações de assepsia e cuidados fornecidas pela profissional.</li>
-                      <li>Declaro não possuir condições médicas que impeçam o procedimento (ex: problemas de coagulação, diabetes descontrolada).</li>
-                      <li>Autorizo a realização do procedimento escolhido.</li>
-                    </ul>
-                  </div>
-                  <label className="flex items-start gap-3 cursor-pointer pt-2">
-                    <div className="relative flex items-center mt-0.5">
-                      <input 
-                        type="checkbox" 
-                        className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-gray-300 checked:bg-primary checked:border-primary transition-all"
-                        checked={consent}
-                        onChange={(e) => setConsent(e.target.checked)}
-                      />
-                      <CheckCircle className="absolute h-5 w-5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
-                    </div>
-                    <span className="text-xs font-bold text-ink leading-tight">Li e concordo com o Termo de Responsabilidade e Consentimento.</span>
-                  </label>
-                </div>
-              </div>
             </div>
 
             <div className="flex gap-3 pt-4">
               <button onClick={prevStep} className="flex-grow py-3 rounded-xl border border-gray-200 font-medium text-gray-custom hover:text-ink">Voltar</button>
               <button 
                 onClick={handleSubmit} 
-                disabled={loading || !consent}
+                disabled={loading}
                 className="flex-grow btn-primary disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
               >
                 {loading ? 'Processando...' : 'Confirmar Agendamento'}

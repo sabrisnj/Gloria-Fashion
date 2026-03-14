@@ -331,8 +331,19 @@ async function startServer() {
       const { client_id, referrer_phone, referral_code, is_manual } = req.body;
       const status = is_manual ? 'pendente' : 'confirmado';
       
+      const numericClientId = Number(client_id);
+      if (isNaN(numericClientId)) {
+        return res.status(400).json({ error: "ID do cliente inválido." });
+      }
+
+      // Verify client exists
+      const client = db.prepare("SELECT id FROM clients WHERE id = ?").get(numericClientId);
+      if (!client) {
+        return res.status(404).json({ error: "Cliente não encontrado. Por favor, faça login novamente." });
+      }
+
       const result = db.prepare("INSERT INTO visits (client_id, referral_code, status) VALUES (?, ?, ?)")
-        .run(client_id, referral_code || referrer_phone || null, status);
+        .run(numericClientId, referral_code || referrer_phone || null, status);
       
       // Give vouchers immediately ONLY if NOT manual
       if (!is_manual) {
