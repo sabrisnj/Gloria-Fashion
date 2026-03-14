@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ShoppingBag, 
@@ -6,33 +6,31 @@ import {
   ChevronDown,
   ExternalLink, 
   Heart,
-  Package
+  Package,
+  Star
 } from 'lucide-react';
 
 import { Link } from 'react-router-dom';
-
-const CATALOG_ITEMS = [
-  "Conteúdo digital",
-  "Body piercing",
-  "Alargadores",
-  "Joias em ouro branco",
-  "Joias em prata",
-  "Folheados",
-  "Bijuterias",
-  "Presentes",
-  "Canecas personalizadas",
-  "Mimos",
-  "Brinquedos",
-  "Cantinho do prazer",
-  "Fantasias",
-  "Produtos 18+",
-  "Moda",
-  "Biquínis",
-  "Lingeries"
-];
+import { CATALOG_ITEMS } from '../constants';
+import { Product } from '../types';
 
 export function Catalog() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching products:', err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -158,6 +156,51 @@ export function Catalog() {
           </div>
         </div>
       </section>
+
+      {/* Featured Products Section */}
+      {!loading && products.length > 0 && (
+        <section className="pt-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-2xl font-bold text-ink">Destaques</h2>
+            <Star className="text-primary" size={20} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {products.slice(0, 4).map((product) => (
+              <motion.div 
+                key={product.id}
+                whileHover={{ y: -5 }}
+                className="card p-0 overflow-hidden border-peach/20 group"
+              >
+                <div className="aspect-square relative overflow-hidden">
+                  <img 
+                    src={product.image_url || `https://picsum.photos/seed/${product.id}/400/400`} 
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute top-2 right-2">
+                    <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-[10px] font-bold text-primary shadow-sm">
+                      R$ {product.price.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-3 space-y-1">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400">{product.category}</p>
+                  <h3 className="font-bold text-xs text-ink line-clamp-1">{product.name}</h3>
+                  <a 
+                    href={`https://wa.me/5511950696045?text=Olá! Tenho interesse no produto: ${product.name}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center w-full py-2 bg-peach/10 text-primary rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-primary hover:text-white transition-colors mt-2"
+                  >
+                    Eu quero
+                  </a>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

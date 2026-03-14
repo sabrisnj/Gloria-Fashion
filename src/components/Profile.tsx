@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { User, LogOut, Bell, History, Ticket, Star, Share2, Camera, Type, Eye, Layout, Volume2, ChevronDown, ChevronUp, Shield, HelpCircle, BookOpen, Smartphone, UserPlus, Calendar as CalendarIcon, ShoppingBag, Gift, QrCode, Accessibility } from 'lucide-react';
+import { User, LogOut, Bell, History, Ticket, Star, Share2, Camera, Type, Eye, Layout, Volume2, ChevronDown, ChevronUp, Shield, HelpCircle, BookOpen, Smartphone, UserPlus, Calendar as CalendarIcon, ShoppingBag, Gift, QrCode, Accessibility, Clock } from 'lucide-react';
 import { Client, Voucher, Appointment } from '../types';
 import { parseISO, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -14,19 +14,24 @@ interface ProfileProps {
 
 export function Profile({ client, onLogout, accessibility, setAccessibility }: ProfileProps) {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(client?.notifications_enabled === 1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (client) {
-      fetch(`/api/vouchers?client_id=${client.id}`)
-        .then(res => res.json())
-        .then(vData => {
+      setLoading(true);
+      Promise.all([
+        fetch(`/api/vouchers?client_id=${client.id}`).then(res => res.json()),
+        fetch(`/api/appointments?client_id=${client.id}`).then(res => res.json())
+      ])
+        .then(([vData, aData]) => {
           setVouchers(vData);
+          setAppointments(aData);
           setLoading(false);
         })
         .catch(err => {
-          console.error('Error fetching vouchers:', err);
+          console.error('Error fetching profile data:', err);
           setLoading(false);
         });
     }
@@ -56,6 +61,42 @@ export function Profile({ client, onLogout, accessibility, setAccessibility }: P
           <LogOut size={20} />
         </button>
       </header>
+
+      {/* Meus Agendamentos Section */}
+      <section className="space-y-4">
+        <h2 className="font-display text-xl font-bold flex items-center gap-2 text-ink">
+          <History size={20} className="text-primary" />
+          Meus Agendamentos
+        </h2>
+        {loading ? (
+          <div className="text-center py-4 text-gray-custom text-sm">Carregando...</div>
+        ) : appointments.length > 0 ? (
+          <div className="grid gap-3">
+            {appointments.map(a => (
+              <div key={a.id} className="card space-y-2 border-peach/20">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-bold text-sm text-ink">{a.service}</h3>
+                  <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${
+                    a.status === 'confirmado' ? 'bg-green-100 text-green-600' : 
+                    a.status === 'cancelado' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'
+                  }`}>
+                    {a.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-gray-custom">
+                  <p className="flex items-center gap-1"><CalendarIcon size={12} /> {a.date && format(parseISO(a.date), "dd 'de' MMMM", { locale: ptBR })}</p>
+                  <p className="flex items-center gap-1"><Clock size={12} /> {a.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="card bg-gray-50 text-center py-8 space-y-2 border-dashed border-gray-200">
+            <History className="text-gray-300 mx-auto" size={32} />
+            <p className="text-gray-custom italic text-sm">Nenhum agendamento encontrado.</p>
+          </div>
+        )}
+      </section>
 
       {/* Acessibilidade Section - Now Collapsible */}
       <CollapsibleSection 

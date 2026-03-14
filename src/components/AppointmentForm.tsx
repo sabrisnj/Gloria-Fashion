@@ -56,11 +56,11 @@ export function AppointmentForm({ client }: AppointmentFormProps) {
 
   useEffect(() => {
     if (client) {
-      fetch('/api/appointments')
+      setLoadingAppointments(true);
+      fetch(`/api/appointments?client_id=${client.id}`)
         .then(res => res.json())
         .then(data => {
-          const clientAppointments = data.filter((a: any) => a.client_id === client.id);
-          setAppointments(clientAppointments);
+          setAppointments(data);
           setLoadingAppointments(false);
         })
         .catch(err => {

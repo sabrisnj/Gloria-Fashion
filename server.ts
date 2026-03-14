@@ -181,6 +181,18 @@ async function startServer() {
     }
   });
 
+  app.delete("/api/admin/products", (req, res) => {
+    try {
+      const { id } = req.query;
+      if (!id) return res.status(400).json({ error: "ID é obrigatório" });
+      db.prepare("DELETE FROM products WHERE id = ?").run(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      res.status(500).json({ error: "Erro ao excluir produto" });
+    }
+  });
+
   // Appointments
   app.get("/api/available-times", (req, res) => {
     const { date } = req.query;
@@ -218,13 +230,23 @@ async function startServer() {
   });
 
   app.get("/api/appointments", (req, res) => {
+    const { client_id } = req.query;
     try {
-      const appointments = db.prepare(`
+      let query = `
         SELECT a.*, c.name as client_name, c.whatsapp as client_whatsapp 
         FROM appointments a 
         JOIN clients c ON a.client_id = c.id
-        ORDER BY a.date DESC, a.time DESC
-      `).all();
+      `;
+      let params: any[] = [];
+      
+      if (client_id) {
+        query += " WHERE a.client_id = ?";
+        params.push(client_id);
+      }
+      
+      query += " ORDER BY a.date DESC, a.time DESC";
+      
+      const appointments = db.prepare(query).all(...params);
       res.json(appointments);
     } catch (error) {
       console.error("Error fetching appointments:", error);
@@ -234,20 +256,28 @@ async function startServer() {
 
   app.post(["/api/appointments", "/api/appointments/"], (req, res) => {
     try {
-      const { client_id, service, date, time, referrer_phone, consent, notifications, profissional_id } = req.body;
+      const { client_id, service, date, time, referrer_phone, consent, notifications } = req.body;
       
-      // 1. VALIDAÇÃO DE DADOS BÁSICA
+      console.log(`[APPOINTMENT] New request from client_id: ${client_id}`, { service, date, time });
+
       if (!client_id || !service || !date || !time) {
         return res.status(400).json({ 
           error: "Campos obrigatórios ausentes",
-          details: "Nome (client_id), serviço, data e hora são obrigatórios." 
+          details: "ID do cliente, serviço, data e hora são obrigatórios." 
         });
       }
 
-      // 2. CORREÇÃO DA FOREIGN KEY (LÓGICA "À PROVA DE ERROS")
-      // Se o cliente não existir ou o ID for inválido, o banco lançará erro de FK.
-      // Aqui garantimos que o ID seja pelo menos um número válido.
-      const idSeguroCliente = parseInt(String(client_id)) || 0;
+      const numericClientId = Number(client_id);
+      if (isNaN(numericClientId)) {
+        return res.status(400).json({ error: "ID do cliente inválido." });
+      }
+
+      // Verify client exists
+      const client = db.prepare("SELECT id FROM clients WHERE id = ?").get(numericClientId);
+      if (!client) {
+        console.warn(`[APPOINTMENT] Client ${numericClientId} not found in database.`);
+        return res.status(404).json({ error: "Sua sessão expirou ou o cliente não foi encontrado. Por favor, saia e entre novamente." });
+      }
 
       // Double booking prevention
       const existing = db.prepare("SELECT id FROM appointments WHERE date = ? AND time = ? AND status != 'cancelado'").get(date, time);
@@ -255,29 +285,22 @@ async function startServer() {
         return res.status(400).json({ error: "Este horário já foi reservado. Por favor, escolha outro." });
       }
 
-      console.log("Agendamento recebido com sucesso:", { client_id: idSeguroCliente, service, date, time });
-
       const result = db.prepare("INSERT INTO appointments (client_id, service, date, time, referrer_phone, consent, notifications) VALUES (?, ?, ?, ?, ?, ?, ?)")
-        .run(idSeguroCliente, service, date, time, referrer_phone, consent || 0, notifications || 0);
+        .run(numericClientId, service, date, time, referrer_phone, consent || 0, notifications || 0);
       
+      console.log(`[APPOINTMENT] Created successfully: ID ${result.lastInsertRowid}`);
+
       res.status(200).json({ 
         success: true, 
-        message: "Agendamento realizado com sucesso!",
         id: result.lastInsertRowid,
-        data: { service, date, time }
+        message: "Agendamento solicitado com sucesso!"
       });
     } catch (error: any) {
-      console.error("Erro detalhado no agendamento:", error);
-
-      // TRATAMENTO DO ERRO DE FOREIGN KEY ESPECÍFICO
-      if (error.message && error.message.includes("FOREIGN KEY constraint failed")) {
-        return res.status(409).json({
-          error: "Erro de integridade: O cliente selecionado não existe no banco.",
-          suggestion: "Verifique se o cadastro do cliente foi realizado corretamente ou se o ID é válido."
-        });
+      console.error("Erro ao criar agendamento:", error);
+      if (error.message && error.message.includes("FOREIGN KEY")) {
+        return res.status(400).json({ error: "Erro de integridade: Cliente não encontrado. Tente fazer login novamente." });
       }
-
-      res.status(500).json({ error: "Erro interno no servidor ao processar agendamento" });
+      res.status(500).json({ error: "Erro interno ao processar agendamento", details: error.message });
     }
   });
 

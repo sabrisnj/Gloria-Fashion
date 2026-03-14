@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { motion } from 'motion/react';
-import { ShieldCheck, LogOut, Package, Calendar, Users, Ticket, Settings, Plus, Edit2, Trash2, Check, X, MapPin, CheckCircle } from 'lucide-react';
+import { ShieldCheck, LogOut, Package, Calendar, Users, Ticket, Settings, Plus, Edit2, Trash2, Check, X, MapPin, CheckCircle, MessageSquare } from 'lucide-react';
 import { Product, Appointment, Client, Voucher, Visit } from '../types';
 import { formatCurrency } from '../utils';
+import { CATALOG_ITEMS } from '../constants';
 
 interface AdminPanelProps {
   onLogout: () => void;
@@ -70,6 +71,54 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
       fetchData();
     } catch (error) {
       alert('Erro ao atualizar status da visita.');
+    }
+  };
+
+  const handleDeleteProduct = async (id: number) => {
+    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+    try {
+      const response = await fetch(`/api/admin/products?id=${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        fetchData();
+      } else {
+        alert('Erro ao excluir produto.');
+      }
+    } catch (error) {
+      alert('Erro ao excluir produto.');
+    }
+  };
+
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: 'Body piercing',
+    image_url: ''
+  });
+  const [showAddProduct, setShowAddProduct] = useState(false);
+
+  const handleAddProduct = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newProduct,
+          price: parseFloat(newProduct.price)
+        }),
+      });
+      if (response.ok) {
+        setNewProduct({ name: '', description: '', price: '', category: 'Body piercing', image_url: '' });
+        setShowAddProduct(false);
+        fetchData();
+      } else {
+        alert('Erro ao adicionar produto.');
+      }
+    } catch (error) {
+      alert('Erro ao adicionar produto.');
     }
   };
 
@@ -157,13 +206,21 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                         <p className="text-ink"><strong>Data/Hora:</strong> {a.date} às {a.time}</p>
                         {a.referrer_phone && <p className="text-ink"><strong>Indicado por:</strong> {a.referrer_phone}</p>}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <button 
                           onClick={() => handleStatusChange(a.id, 'confirmado')}
                           className="flex-grow flex items-center justify-center gap-1 bg-green-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-green-600 transition-all shadow-md shadow-green-200"
                         >
                           <Check size={14} /> Aprovar
                         </button>
+                        <a 
+                          href={`https://wa.me/${a.client_whatsapp?.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${a.client_name}! Aqui é da Glória Fashion. Gostaria de confirmar seu agendamento para ${a.service} no dia ${a.date} às ${a.time}. Podemos confirmar?`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-grow flex items-center justify-center gap-1 bg-blue-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-blue-600 transition-all shadow-md shadow-blue-200"
+                        >
+                          <MessageSquare size={14} /> WhatsApp
+                        </a>
                         <button 
                           onClick={() => handleStatusChange(a.id, 'cancelado')}
                           className="flex-grow flex items-center justify-center gap-1 bg-red-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-red-600 transition-all shadow-md shadow-red-200"
@@ -265,24 +322,102 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-xl font-bold text-ink">Gerenciar Produtos</h2>
-                <button className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/20">
-                  <Plus size={20} />
+                <button 
+                  onClick={() => setShowAddProduct(!showAddProduct)}
+                  className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/20"
+                >
+                  {showAddProduct ? <X size={20} /> : <Plus size={20} />}
                 </button>
               </div>
+
+              {showAddProduct && (
+                <motion.form 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  onSubmit={handleAddProduct}
+                  className="card space-y-3 border-primary/20 bg-primary/5"
+                >
+                  <h3 className="font-bold text-sm text-primary">Novo Produto</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2 space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-gray-custom">Nome</label>
+                      <input 
+                        type="text" 
+                        required
+                        className="input-field text-sm" 
+                        value={newProduct.name}
+                        onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-gray-custom">Preço (R$)</label>
+                      <input 
+                        type="number" 
+                        step="0.01"
+                        required
+                        className="input-field text-sm" 
+                        value={newProduct.price}
+                        onChange={e => setNewProduct({...newProduct, price: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-gray-custom">Categoria</label>
+                      <select 
+                        className="input-field text-sm"
+                        value={newProduct.category}
+                        onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                      >
+                        {CATALOG_ITEMS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      </select>
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-gray-custom">Descrição</label>
+                      <textarea 
+                        className="input-field text-sm min-h-[60px]" 
+                        value={newProduct.description}
+                        onChange={e => setNewProduct({...newProduct, description: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-span-2 space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-gray-custom">URL da Imagem (Opcional)</label>
+                      <input 
+                        type="text" 
+                        className="input-field text-sm" 
+                        placeholder="https://..."
+                        value={newProduct.image_url}
+                        onChange={e => setNewProduct({...newProduct, image_url: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <button type="submit" className="btn-primary w-full py-2 text-sm">Adicionar Produto</button>
+                </motion.form>
+              )}
+
               <div className="grid gap-3">
                 {products.map(p => (
                   <div key={p.id} className="card flex items-center gap-4 border-peach/20">
-                    <div className="w-12 h-12 bg-peach/10 rounded-lg flex items-center justify-center text-primary">
-                      <Package size={24} />
+                    <div className="w-12 h-12 bg-peach/10 rounded-lg flex items-center justify-center text-primary overflow-hidden">
+                      {p.image_url ? (
+                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        <Package size={24} />
+                      )}
                     </div>
                     <div className="flex-grow">
                       <h3 className="font-bold text-sm text-ink">{p.name}</h3>
-                      <p className="text-[10px] text-gray-custom uppercase font-bold">{p.category}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] text-gray-custom uppercase font-bold">{p.category}</p>
+                        <span className="text-[10px] text-primary font-bold">R$ {p.price.toFixed(2)}</span>
+                      </div>
                     </div>
                     <div className="text-right">
                       <div className="flex gap-2 mt-1">
-                        <button className="text-gray-custom hover:text-ink"><Edit2 size={14} /></button>
-                        <button className="text-gray-custom hover:text-primary"><Trash2 size={14} /></button>
+                        <button 
+                          onClick={() => handleDeleteProduct(p.id)}
+                          className="text-gray-custom hover:text-primary transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </div>
                   </div>
