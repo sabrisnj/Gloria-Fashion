@@ -21,7 +21,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   const [modal, setModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
-  const [appointmentFilter, setAppointmentFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
+  const [appointmentFilter, setAppointmentFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('pending');
 
   useEffect(() => {
     fetchData();
@@ -238,7 +238,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
                       </div>
                       <div className="flex gap-2">
                         {a.status === 'aguardando aprovação' && (
-                          <ActionBtn onClick={() => handleStatusChange(a.id, 'confirmado')} label="Aprovar" variant="success" />
+                          <ActionBtn onClick={() => handleStatusChange(a.id, 'confirmado')} label="Confirmar" variant="success" />
                         )}
                         {a.status !== 'cancelado' && (
                           <ActionBtn onClick={() => handleStatusChange(a.id, 'cancelado')} label="Cancelar" variant="danger" />
