@@ -6,17 +6,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { message, name } = req.body;
+  // Suporta tanto 'message'/'name' quanto 'prompt'/'nome'
+  const { message, name, prompt, nome } = req.body;
+  const finalPrompt = prompt || message;
+  const finalName = nome || name || 'visitante';
 
-  if (!message) {
-    return res.status(400).json({ error: 'Message is required' });
+  if (!finalPrompt) {
+    return res.status(400).json({ error: 'O campo "prompt" ou "message" é obrigatório.' });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     console.error('GEMINI_API_KEY is not defined');
-    return res.status(500).json({ error: 'Configuração do servidor incompleta (API Key ausente)' });
+    return res.status(500).json({ error: 'Chave de API (GEMINI_API_KEY) não configurada na Vercel.' });
   }
 
   try {
@@ -26,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const systemInstruction = `Você é a assistente virtual da Glória Fashion, um studio premium de piercing e acessórios em São Bernardo do Campo.
     Seu objetivo é ajudar os clientes com dúvidas sobre agendamentos, produtos, endereço e promoções.
     Seja sempre educada, prestativa e use um tom acolhedor.
-    O nome do cliente é ${name || 'visitante'}.
+    O nome do cliente é ${finalName}.
     
     Informações importantes:
     - Endereço: R. Mal. Rondon, 113 – Loja 65, Centro – São Bernardo do Campo.
@@ -37,7 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const response = await ai.models.generateContent({
       model,
-      contents: message,
+      contents: finalPrompt,
       config: {
         systemInstruction,
       },
@@ -45,9 +48,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ text: response.text });
   } catch (error: any) {
-    console.error('Gemini API Error:', error);
+    console.error('ERRO DETALHADO DA API:', error);
     return res.status(500).json({ 
-      error: 'Ocorreu um erro ao processar sua solicitação com a IA.',
+      error: 'Falha na invocação da função',
       details: error.message 
     });
   }

@@ -33,11 +33,17 @@ async function startServer() {
   // --- API ROUTES ---
 
   app.post("/api/chat", async (req, res) => {
-    const { message, name } = req.body;
+    const { message, name, prompt, nome } = req.body;
+    const finalPrompt = prompt || message;
+    const finalName = nome || name || 'visitante';
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      return res.status(500).json({ error: "GEMINI_API_KEY não configurada" });
+      return res.status(500).json({ error: "Chave de API (GEMINI_API_KEY) não configurada no servidor." });
+    }
+
+    if (!finalPrompt) {
+      return res.status(400).json({ error: 'O campo "prompt" ou "message" é obrigatório.' });
     }
 
     try {
@@ -47,7 +53,7 @@ async function startServer() {
       const systemInstruction = `Você é a assistente virtual da Glória Fashion, um studio premium de piercing e acessórios em São Bernardo do Campo.
       Seu objetivo é ajudar os clientes com dúvidas sobre agendamentos, produtos, endereço e promoções.
       Seja sempre educada, prestativa e use um tom acolhedor.
-      O nome do cliente é ${name || 'visitante'}.
+      O nome do cliente é ${finalName}.
       
       Informações importantes:
       - Endereço: R. Mal. Rondon, 113 – Loja 65, Centro – São Bernardo do Campo.
@@ -58,7 +64,7 @@ async function startServer() {
 
       const response = await ai.models.generateContent({
         model,
-        contents: message,
+        contents: finalPrompt,
         config: {
           systemInstruction,
         },
@@ -66,8 +72,11 @@ async function startServer() {
 
       res.json({ text: response.text });
     } catch (error: any) {
-      console.error("Gemini Error:", error);
-      res.status(500).json({ error: "Erro ao processar chat", details: error.message });
+      console.error("ERRO DETALHADO DA API:", error);
+      res.status(500).json({ 
+        error: "Falha na invocação da função", 
+        details: error.message 
+      });
     }
   });
 
