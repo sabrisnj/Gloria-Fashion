@@ -52,33 +52,44 @@ export function VirtualAssistant({ isOpen, onClose, client }: VirtualAssistantPr
     setInput('');
     setIsTyping(true);
 
-    // Simulated AI response based on keywords
-    setTimeout(() => {
-      let botText = "Desculpe, não entendi. Você pode tentar perguntar sobre 'agendamento', 'produtos', 'endereço' ou 'promoções'.";
-      const lowerInput = input.toLowerCase();
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: input,
+          name: client?.name || 'visitante'
+        }),
+      });
 
-      if (lowerInput.includes('agendar') || lowerInput.includes('piercing')) {
-        botText = "Para agendar um piercing, basta clicar no ícone de calendário no menu inferior ou digitar 'agendar' aqui. Atendemos de Segunda a Sábado, das 09:00 às 19:30.";
-      } else if (lowerInput.includes('produto') || lowerInput.includes('catálogo')) {
-        botText = "Temos uma grande variedade de produtos! Você pode conferir nosso catálogo completo na tela inicial do aplicativo.";
-      } else if (lowerInput.includes('endereço') || lowerInput.includes('onde fica')) {
-        botText = "Estamos localizados na R. Mal. Rondon, 113 – Loja 65, Centro – São Bernardo do Campo. Esperamos sua visita!";
-      } else if (lowerInput.includes('promoção') || lowerInput.includes('desconto')) {
-        botText = "Temos várias promoções! 'Amor Está no Ar' (5% na 2ª joia), 'Triplo de Joias' (10% na 3ª) e muito mais. Confira na aba de Catálogo!";
-      } else if (lowerInput.includes('ouvidoria') || lowerInput.includes('reclamação')) {
-        botText = "Sua opinião é muito importante! Você pode falar diretamente com a Ouvidoria Ivone através do nosso WhatsApp: 11 95069-6045.";
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao falar com a assistente');
       }
 
       const botMsg: Message = {
         id: Date.now() + 1,
-        text: botText,
+        text: data.text,
         sender: 'bot',
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, botMsg]);
+    } catch (error: any) {
+      console.error('Chat error:', error);
+      const errorMsg: Message = {
+        id: Date.now() + 1,
+        text: "Desculpe, tive um problema técnico. Você pode tentar novamente em alguns instantes ou perguntar sobre 'agendamento', 'produtos' ou 'endereço'.",
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
   return (

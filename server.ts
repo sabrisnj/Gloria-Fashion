@@ -1,5 +1,6 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
+import { GoogleGenAI } from "@google/genai";
 import db from "./src/database.ts";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -30,6 +31,45 @@ async function startServer() {
   });
 
   // --- API ROUTES ---
+
+  app.post("/api/chat", async (req, res) => {
+    const { message, name } = req.body;
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({ error: "GEMINI_API_KEY não configurada" });
+    }
+
+    try {
+      const ai = new GoogleGenAI({ apiKey });
+      const model = "gemini-3-flash-preview";
+
+      const systemInstruction = `Você é a assistente virtual da Glória Fashion, um studio premium de piercing e acessórios em São Bernardo do Campo.
+      Seu objetivo é ajudar os clientes com dúvidas sobre agendamentos, produtos, endereço e promoções.
+      Seja sempre educada, prestativa e use um tom acolhedor.
+      O nome do cliente é ${name || 'visitante'}.
+      
+      Informações importantes:
+      - Endereço: R. Mal. Rondon, 113 – Loja 65, Centro – São Bernardo do Campo.
+      - Horário: Segunda a Sábado, das 09:00 às 19:30.
+      - Agendamentos: Podem ser feitos pelo app na aba 'Agendar'.
+      - Promoções: 'Amor Está no Ar' (5% na 2ª joia), 'Triplo de Joias' (10% na 3ª).
+      - Ouvidoria: Falar com Ivone no WhatsApp 11 95069-6045.`;
+
+      const response = await ai.models.generateContent({
+        model,
+        contents: message,
+        config: {
+          systemInstruction,
+        },
+      });
+
+      res.json({ text: response.text });
+    } catch (error: any) {
+      console.error("Gemini Error:", error);
+      res.status(500).json({ error: "Erro ao processar chat", details: error.message });
+    }
+  });
 
   app.get("/api/health", (req, res) => {
     res.json({ 
