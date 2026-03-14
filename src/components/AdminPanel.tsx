@@ -13,6 +13,7 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,14 +23,16 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [aRes, pRes, vRes] = await Promise.all([
+      const [aRes, pRes, vRes, cRes] = await Promise.all([
         fetch('/api/appointments').then(res => res.json()),
         fetch('/api/products').then(res => res.json()),
-        fetch('/api/visits').then(res => res.json())
+        fetch('/api/visits').then(res => res.json()),
+        fetch('/api/users').then(res => res.json())
       ]);
       setAppointments(aRes);
       setProducts(pRes);
       setVisits(vRes);
+      setClients(cRes);
     } catch (error) {
       console.error("Failed to fetch admin data", error);
     } finally {
@@ -290,11 +293,33 @@ export function AdminPanel({ onLogout }: AdminPanelProps) {
 
           {activeTab === 'clients' && (
             <div className="space-y-4">
-              <h2 className="font-display text-xl font-bold text-ink">Base de Clientes</h2>
-              <p className="text-xs text-gray-custom italic">Visualização de clientes cadastrados e histórico de visitas.</p>
-              <div className="card bg-gray-50 text-center py-20 border-dashed border-gray-200">
-                <Users className="text-gray-300 mx-auto mb-2" size={48} />
-                <p className="text-gray-custom">Módulo em desenvolvimento.</p>
+              <h2 className="font-display text-xl font-bold text-ink">Base de Clientes ({clients.length})</h2>
+              <div className="grid gap-3">
+                {clients.map(client => (
+                  <div key={client.id} className="card p-4 flex items-center justify-between border-peach/20">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                        <Users size={20} />
+                      </div>
+                      <div>
+                        <p className="font-bold text-ink">{client.name}</p>
+                        <p className="text-xs text-gray-custom">{client.whatsapp}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-gray-custom uppercase font-bold">Último Acesso</p>
+                      <p className="text-xs font-medium text-ink">
+                        {client.last_access ? new Date(client.last_access).toLocaleDateString('pt-BR') : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {clients.length === 0 && (
+                  <div className="card bg-gray-50 text-center py-20 border-dashed border-gray-200">
+                    <Users className="text-gray-300 mx-auto mb-2" size={48} />
+                    <p className="text-gray-custom">Nenhum cliente cadastrado.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -5,7 +5,13 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const db = new Database(path.join(__dirname, 'gloria_fashion.db'));
+// On Vercel, we must use /tmp for a writable filesystem
+const isVercel = process.env.VERCEL || process.env.NODE_ENV === 'production';
+const dbPath = isVercel 
+  ? path.join('/tmp', 'gloria_fashion.db')
+  : path.join(__dirname, 'gloria_fashion.db');
+
+const db = new Database(dbPath);
 
 // Initialize tables
 db.exec(`
