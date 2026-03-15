@@ -8,10 +8,12 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+const app = express();
 
+export async function getApp() {
+  // Only configure once
+  if ((app as any)._configured) return app;
+  
   // Database health check
   try {
     const tableCount = db.prepare("SELECT count(*) as count FROM sqlite_master WHERE type='table'").get();
@@ -486,9 +488,17 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  (app as any)._configured = true;
+  return app;
 }
 
-startServer();
+export default app;
+
+if (process.env.NODE_ENV !== "production" || process.env.VITE_START_SERVER === "true") {
+  const PORT = 3000;
+  getApp().then(() => {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  });
+}
